@@ -1,2 +1,1 @@
-andromede
-=========
+#Composant parent
