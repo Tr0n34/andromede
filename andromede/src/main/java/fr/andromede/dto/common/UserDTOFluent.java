@@ -4,6 +4,8 @@ import fr.andromede.common.enums.UserRoles;
 import fr.andromede.dto.common.impl.UserDTO;
 
 public interface UserDTOFluent {
+	
+	public UserDTOFluent id(String id);
 
 	public UserDTOFluent login(String login);
 

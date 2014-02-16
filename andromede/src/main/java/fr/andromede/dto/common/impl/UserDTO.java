@@ -15,7 +15,7 @@ public class UserDTO implements DTO {
 	private UserRoles role;
 
 	public static UserDTOFluent with() {
-		return (UserDTOFluent)ObjectFluentBuilder.create(new UserDTO(), UserDTOFluent.class);
+		return ObjectFluentBuilder.create(new UserDTO(), UserDTOFluent.class);
 	}
 
 	@Override

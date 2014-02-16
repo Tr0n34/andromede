@@ -27,18 +27,8 @@
 	</bean>
 
 	<mongo:mongo host="127.0.0.1" port="27017" />
-	<mongo:db-factory dbname="oecistedbtest" />
+	<mongo:db-factory dbname="oecistedb" />
 
-	<!-- 
-	MAPPING DOZER
-	-->
-	<bean id="mapper" class="org.dozer.DozerBeanMapper">
-		<property name="mappingFiles">
-			<list>
-				<value>mapping-entity.xml</value>
-			</list>
-		</property>	
-	</bean>
 	<!-- 
 	RESSOURCES
 	-->
@@ -59,5 +49,11 @@
 	<bean id="freemarkerConfig" class="org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer">
 		<property name="templateLoaderPath" value="WEB-INF/" />
 	</bean>
+	
+	<!--
+	MAPPER
+	-->
+	 <bean id="mapper" class="fr.andromede.common.utils.CustomMapper" />
+	
 
 </beans>

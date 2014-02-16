@@ -19,6 +19,8 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Repository;
 
+import com.mongodb.MongoException;
+
 import fr.andromede.common.utils.Utils;
 import fr.andromede.dao.SequencerBuilder;
 import fr.andromede.dao.UserDAO;
@@ -37,21 +39,27 @@ public class UserDAOImpl extends UserDAO {
 	public UserDTO create(UserDTO userDTO) throws DataAccessException {
 		LOGGER.trace("============================== DAO ================================");
 		LOGGER.trace("START -- create(UserDTO)");
-		if ( userDTO == null )
-			throw new DataAccessResourceFailureException("Un DTO de valeur [null] ne peut être inséré en table.");
-		try {
-			String nextID = getSequencer().getNextID();
-			userDTO.setId(nextID);
-			LOGGER.trace("Création d'un nouveau UserDTO avec pour ID : [{}].", nextID);
-			LOGGER.debug(Utils.toString(userDTO));
-			getTemplate().insert(userDTO);
-		} catch (Exception e) {
-			LOGGER.error(e.getMessage(), e);
-			throw new DataIntegrityViolationException("Erreur du séquenceur Andromede pour MongoDB.");
-		} finally {
-			LOGGER.trace("END   -- create(UserDTO )");
-			LOGGER.trace("===================================================================");
+		LOGGER.trace(Utils.toString(userDTO));
+		if ( userDTO != null ) {
+			if ( userDTO.getId() == null || !"".equalsIgnoreCase(userDTO.getId().trim()) ) {
+				try {
+					String nextID = getSequencer().getNextID();
+					userDTO.setId(nextID);
+					LOGGER.trace("Création d'un nouveau UserDTO avec pour ID : [{}].", nextID);
+					LOGGER.debug(Utils.toString(userDTO));
+					getTemplate().insert(userDTO);
+				} catch (Exception e) {
+					LOGGER.error(e.getMessage(), e);
+					throw e;
+				}
+			} else {
+				throw new InvalidDataAccessResourceUsageException("L'identifiant de l'utilisateur existe déjà en table. Création impossible.");
+			}
+		} else {
+			throw new InvalidDataAccessResourceUsageException("La création d'un utilisateur [null] est impossible.");
 		}
+		LOGGER.trace("END   -- create(UserDTO )");
+		LOGGER.trace("===================================================================");
 		return userDTO;
 	}
 
@@ -63,7 +71,7 @@ public class UserDAOImpl extends UserDAO {
 			Query query = new Query(Criteria.where("id").is(key));
 			user = (UserDTO)getTemplate().findOne(query, UserDTO.class);
 		} else {
-			throw new DataRetrievalFailureException("La clef [null] ne peut être recherchée.");
+			throw new InvalidDataAccessResourceUsageException("La clef [null] ne peut être recherchée.");
 		}
 		LOGGER.debug(Utils.toString(user));
 		LOGGER.trace("END   -- read({})", key);
@@ -97,13 +105,21 @@ public class UserDAOImpl extends UserDAO {
 		LOGGER.trace("============================== DAO ================================");
 		LOGGER.trace("START -- update(UserDTO)");
 		LOGGER.debug(Utils.toString(userDTO));
-		Query query = new Query(Criteria.where("ID").is(userDTO.getId()));
-		Update update = new Update();
-		Map<String, Object> map = Utils.mapAttributes(userDTO);
-		for ( Entry<String, Object> entry : map.entrySet() ) {
-			update.set((String)entry.getKey(), entry.getValue());
+		if ( userDTO != null ) {
+			if ( userDTO.getId() != null && !"".equalsIgnoreCase(userDTO.getId().trim()) ) {
+				Query query = new Query(Criteria.where("id").is(userDTO.getId()));
+				Update update = new Update();
+				Map<String, Object> map = Utils.mapAttributes(userDTO);
+				for ( Entry<String, Object> entry : map.entrySet() ) {
+					update.set((String)entry.getKey(), entry.getValue());
+				}
+				getTemplate().updateFirst(query, update, UserDTO.class);
+			} else {
+				throw new InvalidDataAccessResourceUsageException("Les mises à jour de l'utilisateur sont impossibles. Aucune clef unique transmise.");
+			}
+		} else {
+			throw new InvalidDataAccessResourceUsageException("Les mises à jour de l'utilisateur [null] sont impossibles.");
 		}
-		getTemplate().updateFirst(query, update, UserDTO.class);
 		LOGGER.trace("END   -- update(UserDTO)");
 		LOGGER.trace("===================================================================");
 		return userDTO;
@@ -123,7 +139,7 @@ public class UserDAOImpl extends UserDAO {
 			Query query = new Query(Criteria.where("id").is(key));
 			getTemplate().remove(query, UserDTO.class);
 		} else {
-			throw new DataRetrievalFailureException("La clef [null] ne peut être utilisée pour la suppression.");
+			throw new InvalidDataAccessResourceUsageException("La clef [null] ne peut être utilisée pour la suppression.");
 		}
 		LOGGER.trace("END   -- delete({})", key);
 		LOGGER.trace("===================================================================");

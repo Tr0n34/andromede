@@ -2,12 +2,16 @@ package fr.andromede.services.impl;
 
 import javax.annotation.Resource;
 
-import org.dozer.Mapper;
+import ma.glasnost.orika.MapperFacade;
+import ma.glasnost.orika.MapperFactory;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Component;
 
+import fr.andromede.common.exceptions.BusinessServiceException;
+import fr.andromede.common.utils.CustomMapper;
 import fr.andromede.common.utils.Utils;
 import fr.andromede.dao.UserDAO;
 import fr.andromede.dto.common.impl.UserDTO;
@@ -23,31 +27,27 @@ public class UserBusinessServiceImpl implements UserBusinessService {
 	private UserDAO userDAO;
 
 	@Resource(name="mapper")
-	private Mapper mapper;
-
-	public Mapper getMapper() {
-		return this.mapper;
+	private MapperFacade mapper;
+	
+	public void init() {
+		
+	}
+	
+	public void saveUser(User user) throws BusinessServiceException, DataAccessException {
 	}
 
-	public void setMapper(Mapper mapper) {
-		this.mapper = mapper;
-	}
-
-	public void saveUser(User user)
-			throws DataAccessException {
-	}
-
-	public User retrieveUser(String key) throws DataAccessException {
-		LOGGER.trace("START  -- retrieve({})", key);
-		UserDTO userDTO = (UserDTO)this.userDAO.read(key);
-		User user = (User)this.mapper.map(userDTO, User.class);
-		LOGGER.debug("Utilisateur trouvé : {}.", Utils.toString(user));
-		LOGGER.trace("END    -- retrieve({})", key);
-		return user;
-	}
-
-	public User createUser(User user) throws DataAccessException {
+	public User retrieveUser(String key) throws BusinessServiceException, DataAccessException {
 		return null;
+	}
+
+	public User createUser(User user) throws BusinessServiceException, DataAccessException {
+		LOGGER.trace("START  -- createUser(User)");
+		LOGGER.trace(Utils.toString(user));
+		UserDTO userDTO = this.mapper.map(user, UserDTO.class);
+		User createdUser = this.mapper.map(this.userDAO.create(userDTO), User.class);
+		LOGGER.trace(Utils.toString(createdUser));
+		LOGGER.trace("END    -- createUser(User");
+		return createdUser;
 	}
 
 }
