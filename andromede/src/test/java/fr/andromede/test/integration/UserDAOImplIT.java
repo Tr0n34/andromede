@@ -1,4 +1,4 @@
-package fr.andromede.test.integration.dao;
+package fr.andromede.test.integration;
 
 import javax.annotation.Resource;
 
@@ -43,6 +43,25 @@ public class UserDAOImplIT {
 		} catch(Exception e) {
 			fail(e.getMessage(), e);
 		}
+	}
+	
+	@Test
+	public void create_user_withNullParam() {
+		try {
+			UserDTO userDTO = UserDTO.with()
+					.login("nletteron")
+					.password(null)
+					.name("LETTERON")
+					.surname("Nicolas")
+					.role(null)
+					.create();
+			UserDTO createdUser = this.userDAO.create(userDTO);
+			assertThat(createdUser).isNotNull().isInstanceOf(UserDTO.class);
+			assertThat(createdUser.getLogin()).isEqualTo(userDTO.getLogin());
+			assertThat(createdUser.getPassword()).isEqualTo(userDTO.getPassword());
+		} catch(Exception e) {
+			fail(e.getMessage(), e);
+		}		
 	}
 	
 	

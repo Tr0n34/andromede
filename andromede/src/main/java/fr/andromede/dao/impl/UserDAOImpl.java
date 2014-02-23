@@ -10,16 +10,11 @@ import javax.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
-import org.springframework.dao.DataAccessResourceFailureException;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Repository;
-
-import com.mongodb.MongoException;
 
 import fr.andromede.common.utils.Utils;
 import fr.andromede.dao.SequencerBuilder;
@@ -41,7 +36,7 @@ public class UserDAOImpl extends UserDAO {
 		LOGGER.trace("START -- create(UserDTO)");
 		LOGGER.trace(Utils.toString(userDTO));
 		if ( userDTO != null ) {
-			if ( userDTO.getId() == null || !"".equalsIgnoreCase(userDTO.getId().trim()) ) {
+			if ( userDTO.getId() == null || "".equalsIgnoreCase(userDTO.getId().trim()) ) {
 				try {
 					String nextID = getSequencer().getNextID();
 					userDTO.setId(nextID);
@@ -83,11 +78,18 @@ public class UserDAOImpl extends UserDAO {
 		LOGGER.trace("============================== DAO ================================");
 		LOGGER.trace("START -- read(UserDTO)");
 		List<UserDTO> users = new ArrayList<UserDTO>();
-		if (userDTO != null) {
+		if ( userDTO != null ) {
 			LOGGER.trace(Utils.toString(userDTO));
-			Criteria critere = Criteria.where("login").is(userDTO.getLogin());
-			if (userDTO.getPassword() != null) {
-				critere.and("password").is(userDTO.getPassword());
+			Map<String, Object> attributes = Utils.mapAttributes(userDTO);
+			Criteria critere = null;
+			boolean firstElement = true;
+			for ( Entry<String, Object> entry : attributes.entrySet() ) {
+				if ( !firstElement ) {
+					critere = critere.and(entry.getKey()).is(entry.getValue());
+				} else {
+					critere = Criteria.where(entry.getKey()).is(entry.getValue());
+					firstElement = false;
+				}
 			}
 			Query query = new Query(critere);
 			LOGGER.trace(Utils.toString(critere));

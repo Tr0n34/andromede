@@ -49,8 +49,8 @@ public class SequencerBuilder {
 	public static void resetAllSequencer(DB db) {
 		LOGGER.trace("============================== DAO ================================");
 		LOGGER.trace("START -- resetAllSequencer({})");
-		if (db.collectionExists("sequenceInternalDB")) {
-			DBCollection collections = db.getCollection("sequenceInternalDB");
+		if (db.collectionExists(SEQUENCE_NAME)) {
+			DBCollection collections = db.getCollection(SEQUENCE_NAME);
 			LOGGER.trace("Séquenceur [{}] vidé.", collections.toString());
 			collections.drop();
 		}
@@ -61,16 +61,14 @@ public class SequencerBuilder {
 		LOGGER.trace("============================== DAO ================================");
 		LOGGER.trace("START -- getNextId({})", collectionName);
 
-		DBCollection seq = db.getCollection("sequenceInternalDB");
-
 		DBObject query = new BasicDBObject();
 		query.put("_id", collectionName);
 
-		DBObject change = new BasicDBObject("SEQ", Integer.valueOf(1));
+		DBObject change = new BasicDBObject(SEQUENCE_FIELD, Integer.valueOf(1));
 		DBObject update = new BasicDBObject("$inc", change);
 
-		DBObject res = seq.findAndModify(query, new BasicDBObject(), new BasicDBObject(), false, update, true, true);
-		String nextID = res.get("SEQ").toString();
+		DBObject res = db.getCollection(SEQUENCE_NAME).findAndModify(query, new BasicDBObject(), new BasicDBObject(), false, update, true, true);
+		String nextID = res.get(SEQUENCE_FIELD).toString();
 		LOGGER.trace("ID du séquenceur pour [{}] : [{}].", collectionName, nextID);
 		LOGGER.trace("===================================================================");
 		return nextID;

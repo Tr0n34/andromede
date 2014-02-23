@@ -1,10 +1,12 @@
-package fr.andromede.test.unitaire.dao;
+package fr.andromede.test.unitaire;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -13,7 +15,6 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.MongoException;
-import com.mongodb.WriteResult;
 
 import fr.andromede.common.enums.UserRoles;
 import fr.andromede.dao.SequencerBuilder;
@@ -42,6 +43,7 @@ public class UserDAOImplTest {
 		when(sequencer.getNextID()).thenReturn(ID_SEQUENCER_TEST);
 	}
 	
+	@Test
 	public void mongo_error() {
 		UserDTO userDTO = UserDTO.with()
 				.login("nletteron")
@@ -78,6 +80,26 @@ public class UserDAOImplTest {
 		verify(this.template, times(1)).insert(userDTO);
 		assertThat(userDTO).isNotNull();
 		assertThat(userDTO.getId()).isEqualTo(expectedId);
+	}
+	
+	@Test
+	public void create_user_NullUser() {
+		try {
+			this.userDAO.create(null);
+			fail("L'utilisateur [null] n'aurait pas du être créé.");
+		} catch (Exception e) {
+			assertThat(e).isInstanceOf(InvalidDataAccessResourceUsageException.class);
+		}
+	}
+	
+	@Test
+	public void create_user_ExistingUser() {
+		try {
+			this.userDAO.create(UserDTO.with().login("test").id(ID_SEQUENCER_TEST).create());
+			fail("L'utilisateur est déjà existant et n'aurait pas du être créé.");
+		} catch (Exception e) {
+			assertThat(e).isInstanceOf(InvalidDataAccessResourceUsageException.class);
+		}
 	}
 
 	@Test
@@ -201,15 +223,61 @@ public class UserDAOImplTest {
 			assertThat(e).isInstanceOf(InvalidDataAccessResourceUsageException.class);
 		}		
 	}
-
+	
 	@Test
+	@SuppressWarnings("unchecked")
 	public void read_by_user() {
-		
+		UserDTO userDTO = UserDTO.with().login("nletteron").create();
+		List<UserDTO> users = new ArrayList<UserDTO>();
+		users.add(UserDTO.with().login("nletteron").password("1").surname("test").create());
+		users.add(UserDTO.with().login("nletteron").password("2").create());
+		users.add(UserDTO.with().login("nletteron").password("3").role(UserRoles.ADMIN).create());
+		when((List<UserDTO>)this.template.find((Query)any(), (Class<UserDTO>)any())).thenReturn(users);	
+		try { 
+			List<UserDTO> foundUsers = this.userDAO.read(userDTO);
+			assertThat(foundUsers).isNotNull().isNotEmpty();
+			assertThat(foundUsers).isEqualTo(users);
+		} catch (Exception e) {
+			fail(e.getMessage(), e);
+		}
 	}
 	
 	@Test
 	public void read_by_key() {
-		
+		UserDTO userDTO = UserDTO.with().id(ID_SEQUENCER_TEST)
+				.login("nletteron")
+				.password("password")
+				.name("name")
+				.create();
+		Query query = new Query(Criteria.where("id").is(ID_SEQUENCER_TEST));
+		when(this.template.findOne(query, UserDTO.class)).thenReturn(userDTO);
+		try {
+			UserDTO foundUser = this.userDAO.read(ID_SEQUENCER_TEST);
+			assertThat(foundUser).isNotNull();
+			assertThat(foundUser.getId()).isEqualTo(ID_SEQUENCER_TEST);
+		} catch (Exception e) {
+			fail(e.getMessage(), e);
+		}
+	}
+	
+	@Test
+	public void read_by_nullKey() {
+		try {
+			this.userDAO.read((String)null);
+			fail("L'utilisateur [null] n'aurait pas du être lu.");
+		} catch (Exception e) {
+			assertThat(e).isInstanceOf(InvalidDataAccessResourceUsageException.class);
+		}		
+	}
+	
+	@Test
+	public void read_by_nullUser() {
+		try {
+			this.userDAO.read((UserDTO)null);
+			fail("L'utilisateur [null] n'aurait pas du être lu.");
+		} catch (Exception e) {
+			assertThat(e).isInstanceOf(InvalidDataAccessResourceUsageException.class);
+		}		
 	}
 	
 }
