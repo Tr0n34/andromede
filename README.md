@@ -19,3 +19,16 @@ Pour ceci, seront fournis :
 * Gestion de la sécurité
 * Gestion des caches locaux et caches partagés
 * Constructeurs d'entités et dto fluides
+
+#Composant Hoag
+
+Ce composant fournit une implémentation de plusieurs types de réseaux de neurones (pas de commit pour le moment)
+
+Technologies utilisées :
+* Java EE 7
+* Base NOSql : Mongodb (couche de persistance)
+* AngularJS
+* fest-assert, mockito et Junit (tests unitaires et d'intégration)
+* Couverture de tests sous Cobertura
+* JDK 1.8
+* JBoss
