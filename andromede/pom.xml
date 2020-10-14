@@ -38,7 +38,7 @@
 		<mongo-java-driver.version>2.11.3</mongo-java-driver.version>
 		<!-- Utils -->
 		<commons-digester.version>2.1</commons-digester.version>
-		<commons-beanutils.version>1.8.0</commons-beanutils.version>
+		<commons-beanutils.version>1.9.4</commons-beanutils.version>
 	</properties>
 	
 	<dependencies>
